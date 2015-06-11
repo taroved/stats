@@ -1,8 +1,16 @@
 <?php
 
 $config = array(
-    'host' => '127.0.0.1',
-    'database' => 'stats',
-    'username' => 'root',
-    'password' => 'toor'
+    'mysql' => array(
+        'host' => '127.0.0.1',
+        'database' => 'stats',
+        'username' => 'root',
+        'password' => 'toor'
+    ),
+    'redis' => array(
+        'enabled' => true,
+        'host' => 'localhost',
+        'port' => '6379',
+        'size' => 1000
+    )
 );
