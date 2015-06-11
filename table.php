@@ -36,15 +36,17 @@ class Table {
             $redis->lPush('records', json_encode($record)); //push to queue
 
             if ($redis->lLen('records') > $config['redis']['size']) { //if queue is full
-                $records = array();
+                $pipe = $redis->multi(Redis::PIPELINE);
                 for ($i=0; $i<$config['redis']['size']; $i++) {
-                    $r = $redis->rPop('records');
-                    if ($r)
-                        $records[] = json_decode($r);
-                    else
-                        break;
+                    $pipe->rPop('records');
                 }
-                self::insert_records($records);
+                $records = array_filter($pipe->exec(), function($r) { //filter empty results
+                    return $r != -1;
+                });
+                if ($records)
+                    self::insert_records(array_map(function($r) {
+                        return json_decode($r);
+                    },$records));
             }
         }
         else {
