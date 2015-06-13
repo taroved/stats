@@ -19,7 +19,7 @@ Dump data for selected date
 $ curl -i -X GET --user user123:pass123 http://stats.loc/dump/150611.json
 
 
-Delete date for selected date
+Delete data for selected date
 -----------------------------
 
 $ curl -i -X POST --user user123:pass123 http://stats.loc/delete/150611
