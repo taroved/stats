@@ -12,5 +12,9 @@ $config = array(
         'host' => 'localhost',
         'port' => '6379',
         'size' => 1000
-    )
+    ),
+    'basic_http_auth' => array(
+         'user' => 'user',
+         'password' => '123'
+     )
 );

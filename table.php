@@ -55,19 +55,11 @@ class Table {
     }
 
     private static function insert_records($records) {
-        global $config;
-        $dbconf = $config['mysql'];
-        $db = new PDO('mysql:host='. $dbconf['host'] .';dbname='. $dbconf['database'],
-            $dbconf['username'], $dbconf['password'], array(PDO::ATTR_PERSISTENT => true));
+        $db = self::get_db();
         //1. check if table exists for the date
         $date_part = date('ymd');
         $tablename = "record_$date_part";
-        $table_exists = false;
-        $q = "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '". $dbconf['database'] ."' AND TABLE_NAME = '$tablename'";
-        foreach ($db->query($q) as $x)
-            $table_exists = true;
-
-        if (!$table_exists) { //create the table
+        if (!self::exists($tablename)) { //create the table
             self::create_records_table($db, $tablename);
         }
 
@@ -99,5 +91,61 @@ class Table {
   `created` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;';
         $db->exec($q);
+    }
+
+    private static function get_db()
+    {
+        global $config;
+        $dbconf = $config['mysql'];
+        return new PDO('mysql:host='. $dbconf['host'] .';dbname='. $dbconf['database'],
+            $dbconf['username'], $dbconf['password'], array(PDO::ATTR_PERSISTENT => true));
+    }
+
+    public static function dump_records_table_json($tablename)
+    {
+        if (self::exists($tablename)) {
+            $db = self::get_db();
+            $q = "SELECT `player_id`, `time`, `device_id`, `platform`, `data`, `created` FROM $tablename";
+            echo '[';
+            foreach ($db->query($q) as $record) {
+                echo json_encode($record) . ',';
+                ob_flush();
+            }
+            echo ']';
+            ob_flush();
+        }
+        else {
+            echo "Table $tablename not found";
+        }
+    }
+
+    public static function delete_table($tablename)
+    {
+        $db = self::get_db();
+        $db->exec("DROP TABLE `$tablename`");
+    }
+
+    public static function exists($tablename) {
+        global $config;
+        $dbconf = $config['mysql'];
+        $db = self::get_db();
+        $table_exists = false;
+        $q = "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '". $dbconf['database'] ."' AND TABLE_NAME = '$tablename'";
+        foreach ($db->query($q) as $x)
+            $table_exists = true;
+
+        return $table_exists;
+    }
+
+    public static function get_table_list() {
+        global $config;
+        $dbconf = $config['mysql'];
+        $db = self::get_db();
+        $tables = array();
+        $q = "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '". $dbconf['database'] ."' AND TABLE_NAME LIKE 'record\_%'";
+        foreach ($db->query($q) as $x)
+            $tables[] = substr($x['TABLE_NAME'], strlen('record_'));
+
+        return $tables;
     }
 }
