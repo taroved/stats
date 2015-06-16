@@ -4,23 +4,32 @@ class Table {
 
     public static function validate_record($data, &$errors)
     {
-        if (!isset($data->player_id)) {
-            $errors[] = 'player_id is required';
+        $cfg = array(
+            'player_id' => array('max_length' => 64),
+            'time' => array('is_int', 'min_range' => -2147483648, 'max_range' => 2147483647),
+            'device_id' => array('length' => 64),
+            'platform' => array('max_length' => 64),
+            'data' => array('max_length' => 3000)
+        );
+        foreach ($cfg as $field => $predicate) {
+            if (!isset($data->{$field})) {
+                $errors[] = "$field is required";
+                return false;
+            }
+            if (isset($predicate['length']) && strlen($data->{$field}) != $predicate['length']) {
+                $errors[] = '$field has wrong length. (Must be '. $predicate['length'] .' chars)';
+            }
+            if (isset($predicate['max_length']) && strlen($data->{$field}) > $predicate['max_length']) {
+                $errors[] = "$field value is too long. Max length: ". $predicate['max_length'];
+            }
+            if (in_array('is_int', $predicate)
+                && !filter_var(
+                    $data->{$field},
+                    FILTER_VALIDATE_INT,
+                    array('min_range' => $predicate['min_range'], 'max_range' => $predicate['max_range']))) {
+                $errors[] = "$field must be integer. Min value:". $predicate['min_range'] ."; max value:". $predicate['max_range'];
+            }
         }
-        if (!isset($data->time)) {
-            $errors[] = 'time is required';
-        }
-        if (!isset($data->device_id)) {
-            $errors[] = 'device_id is required';
-        }
-        elseif (strlen($data->device_id) != 64)
-        {
-            $errors[] = 'device_id has wrong length. (Must be 64 chars)';
-        }
-        if (!isset($data->platform)) {
-            $errors[] = 'platform is required';
-        }
-
         return count($errors) == 0;
     }
 
