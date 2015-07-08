@@ -1,5 +1,5 @@
 =======================
-Examples
+Highload statistics server
 =======================
 
 Data sending
